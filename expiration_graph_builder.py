@@ -9,32 +9,83 @@ def construct_graph(portfolio):
     Args:
         portfolio (dict): Dictionary containing the combination of options selected by the user. 
     """
-    # Determine profit/loss at each exercise price.
-    num_calls = len(portfolio["calls"])
-    num_puts = len(portfolio["puts"])
-    print(f"num calls: {num_calls}")
-    print(f"num puts: {num_puts}")
+
+    # Calculate how much it costs to establish position. 
     
-    call_prices = [i[0] for i in portfolio["calls"]]
-    put_prices = [i[0] for i in portfolio["puts"]]
-    
-    call_x_prices = []
-    [call_x_prices.append(i[1]) for i in portfolio["calls"] if i[1] not in call_x_prices]
-    
-    put_x_prices = []
-    [put_x_prices.append(i[1]) for i in portfolio["puts"] if i[1] not in put_x_prices]
-    
-    exercise_prices = call_x_prices + put_x_prices
-        
-    # Calculate how much it cost to establish position. 
+    call_prices = [i[0] * i[1] for i in portfolio["calls"]]
+    put_prices = [i[0] * i[1] for i in portfolio["puts"]]
     position_cost = np.round(sum(call_prices) + sum(put_prices), 3)
+    
     print(f"Cost to establish position : {position_cost}")
-    print(f"Exercise prices : {exercise_prices}")
+    
+    # Extract call and put exercise prices.
+    call_x_prices = []
+    [call_x_prices.append(i[2]) for i in portfolio["calls"] if i[2] not in call_x_prices]
+    put_x_prices = []
+    [put_x_prices.append(i[2]) for i in portfolio["puts"] if i[2] not in put_x_prices]
+    
+    x_prices = list(call_x_prices)
+    x_prices.extend(i for i in put_x_prices if i not in x_prices)
+    
+    print(f"Exercise prices : {x_prices}")
+    
+    # Calculate profit/loss for each option at each exercise price.
+    
+    call_values = {}
+    put_values = {}
+    for price in x_prices:
+        call_values[price] = 0
+        put_values[price] = 0
+    
+    for price in x_prices: # Loop through each strike price
+        for call in portfolio["calls"]:
+            if call[0] > 0: # short call
+                if price <= call[2]: 
+                    call_values[price] += call[0] * (call[2] - price) + (call[0] * call[1])
+                elif price > call[2]: 
+                    call_values[price] += call[0] * (call[2] - price) + (call[0] * call[1])
+            
+            elif call[0] < 0: # long call
+                if price <= call[2]: 
+                    call_values[price] += call[0] * call[1]
+                elif price > call[2]: 
+                    call_values[price] += -call[0] * (price - call[2]) - (call[0] * call[1])
+                    
+        for put in portfolio["puts"]:
+            print(f"values before {put_values}")
+            if put[0] > 0: # short put
+                if price < put[2]:
+                    put_values[price] += put[0] * (price - put[2]) + (put[0] * put[1])
+                elif price >= put[2]:
+                    put_values[price] += put[0] * put[1], 3
+                    
+            elif put[0] < 0: # long put 
+                if price < put[2]:
+                    put_values[price] += -put[0] * (put[2] - price) + (put[0] * put[1])
+                elif price >= put[2]:
+                    put_values[price] += put[0] * put[1]
+            
+    # print(f"value of calls after loop{call_values}")
+    print(f"value of puts after loop{put_values}")
+    
+            
+    # Make axis
+    x_axis = np.arange(min(min(call_x_prices), min(put_x_prices)) - 10, max(max(call_x_prices), max(put_x_prices)) + 10, 1)
+    y_axis = np.arange(-10, 10, 1)
     
 def __main__():
+    
+    # Portfolio dictionary will be created by data_intake.py. Dictionary with keys "calls" and "puts". 
+    # Each key contains a list of calls and puts which holds tuples containing the nature of the position
+    # (long/short), the price of the option, and the exercise/strike price of the option.
+
+    # portfolio["calls"][0] == -1, indicating this portfolio is long one call, the price is contained in 
+    # the 1st index position, $5.50 here, and the exercise price is contained within the 2nd index position, $95 here.
+    # We can see that this portfolio is also long 3 puts at $1.15 each, each with an exercise price of $105.
+     
     portfolio = {
-    "calls" : [(-5.50, 105)],
-    "puts" : [(1.15, 95), (1.15, 95), (1.15, 95)]
+    "calls" : [(1, 9.35, 90), (-2, 2.70, 100)],
+    "puts" : [(4, 1.55, 95), (-2, 3.70, 100)]
     }   
     construct_graph(portfolio)
 
