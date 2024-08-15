@@ -29,10 +29,11 @@ def construct_graph(portfolio):
     
     print(f"Exercise prices : {x_prices}")
     
-    # Calculate profit/loss for each option at each exercise price.
+    # Calculate value of portfolio at each exercise price.
     
     call_values = {}
     put_values = {}
+    portfolio_values = {}
     for price in x_prices:
         call_values[price] = 0
         put_values[price] = 0
@@ -52,26 +53,29 @@ def construct_graph(portfolio):
                     call_values[price] += -call[0] * (price - call[2]) - (call[0] * call[1])
                     
         for put in portfolio["puts"]:
-            print(f"values before {put_values}")
             if put[0] > 0: # short put
                 if price < put[2]:
                     put_values[price] += put[0] * (price - put[2]) + (put[0] * put[1])
                 elif price >= put[2]:
-                    put_values[price] += put[0] * put[1], 3
+                    put_values[price] += put[0] * put[1]
                     
             elif put[0] < 0: # long put 
                 if price < put[2]:
                     put_values[price] += -put[0] * (put[2] - price) + (put[0] * put[1])
                 elif price >= put[2]:
                     put_values[price] += put[0] * put[1]
+                    
+        portfolio_values[price] = np.round(call_values[price] + put_values[price], 3)
             
-    # print(f"value of calls after loop{call_values}")
-    print(f"value of puts after loop{put_values}")
+    print(f'Value of portfolio at each exercise price : {portfolio_values}')
     
-            
     # Make axis
-    x_axis = np.arange(min(min(call_x_prices), min(put_x_prices)) - 10, max(max(call_x_prices), max(put_x_prices)) + 10, 1)
+    x_axis = np.arange(min(x_prices) - 10, max(x_prices) + 10, 1)
     y_axis = np.arange(-10, 10, 1)
+    
+    # Build graph.
+    
+    
     
 def __main__():
     
