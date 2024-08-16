@@ -1,4 +1,4 @@
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Given a portfolio of options, constructs expiration graph
@@ -66,6 +66,10 @@ def construct_graph(portfolio):
                     put_values[price] += put[0] * put[1]
                     
         portfolio_values[price] = np.round(call_values[price] + put_values[price], 3)
+        
+    s = list(portfolio_values.keys())
+    s.sort()
+    portfolio_values = {i : portfolio_values[i] for i in s}
             
     print(f'Value of portfolio at each exercise price : {portfolio_values}')
     
@@ -75,7 +79,17 @@ def construct_graph(portfolio):
     
     # Build graph.
     
+    x = list(portfolio_values.keys())
+    y = list(portfolio_values.values())
     
+    # x_ticks = range(len(x))
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.spines['bottom'].set_position('zero')
+
+    plt.plot(x, y)
+    plt.show()
     
 def __main__():
     
